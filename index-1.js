@@ -26,9 +26,25 @@ class CountdownTimer {
     </div>`;
   }
 
+  #getContainerMarkUp() {
+    const normalizedId = this.timerSelector.replace('#', '');
+    const newContainer = `<div class="timer" id="${normalizedId}">`;
+    return newContainer;
+  }
+
+  #getTimerMarkupWithIncorectSelector() {
+    const newContainer = this.#getContainerMarkUp();
+    const timerMarkUp = this.#getTimerMarkup();
+    document.body.insertAdjacentHTML('beforeend', `${newContainer} ${timerMarkUp}`);
+  }
+
   renderTimerMarkup() {
     const timerMarkUp = this.#getTimerMarkup();
     const timerContainer = document.querySelector(`${this.timerSelector}`);
+    if (!timerContainer) {
+      this.#getTimerMarkupWithIncorectSelector();
+      return;
+    }
     timerContainer.insertAdjacentHTML('afterbegin', timerMarkUp);
   }
 
@@ -43,6 +59,10 @@ class CountdownTimer {
   }
 
   getTimerTime() {
+    if (!this.date.getTime()) {
+      console.log('Invalid targetDate');
+      this.date = new Date();
+    }
     return this.date.getTime() - Date.now();
   }
 
@@ -85,7 +105,7 @@ class CountdownTimer {
   startTimer() {
     this.renderTimerMarkup();
     if (this.getTimerTime() <= 0) {
-      console.log('targetDate < current time');
+      console.log('Datetime <= current time or Invalid targetDate');
       return;
     }
     this.getTimer();
@@ -95,7 +115,10 @@ class CountdownTimer {
 
 const timer = new CountdownTimer({
   selector: '#timer-1',
-  targetDate: new Date('Oct 16, 2021 14:38'),
+  targetDate: new Date('Dec 01 2021 00:00'),
 });
 
 timer.startTimer();
+
+const timerTitle = document.querySelector('.timer-head');
+timerTitle.textContent = `${timer.date.toLocaleDateString()} ${timer.date.toLocaleTimeString()} will come in:`;
