@@ -10,8 +10,47 @@
   <body>
     <p class="timer-head"></p>
     <div class="timer" id="timer-1"></div>
+    <p></p>
+    <ul>
+      <li>(index-1.js) Класс CountdownTimer генерит разметку сам</li>
+      <li>
+        Таймер не будет крашиться если:
+        <ol>
+          <li>При создании екземпляра указать id, которого в разметке нет</li>
+          <li>В разметке не добавить контейнер вообще</li>
+          <li>При создании екземпляра прийдёт время меньше текущего</li>
+          <li>Прийдёт время в неправильном формате</li>
+        </ol>
+      </li>
+      <li>Для интереса добавил логи, которые указывают на ошибку</li>
+      <li>Есть методы для остановки и для перезапуска таймера с указанием новой даты</li>
+    </ul>
+
+    <p class="timer-simple">Минимальная версия (index-2.js)</p>
+    <div class="timer" id="timer-2">
+      <div class="field">
+        <span class="value" data-value="days">00</span>
+        <span class="label">Days</span>
+      </div>
+
+      <div class="field">
+        <span class="value" data-value="hours">00</span>
+        <span class="label">Hours</span>
+      </div>
+
+      <div class="field">
+        <span class="value" data-value="mins">00</span>
+        <span class="label">Minutes</span>
+      </div>
+
+      <div class="field">
+        <span class="value" data-value="secs">00</span>
+        <span class="label">Seconds</span>
+      </div>
+    </div>
 
     <script src="./index-1.js" type="module"></script>
-    <!-- <script src="./index-2.js"></script> -->
+    <script src="./index-2.js"></script>
+    <!-- <script src="./noClass.js"></script> -->
   </body>
 </html>

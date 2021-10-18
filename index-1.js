@@ -6,7 +6,31 @@ class CountdownTimer {
 
   #intervalId = null;
 
-  #getTimerMarkup() {
+  getLocaleTime() {
+    return `${timer.date.toLocaleDateString()} ${timer.date.toLocaleTimeString()}`;
+  }
+
+  logs() {
+    return {
+      noContainer: `html markup has no div container with ${
+        this.timerSelector
+      }. In this case was created new container as first element of body. Or you can add next stroke into your html document: <div class="timer" id="${this.getNormalizedId()}">
+      `,
+      invalidTime: `${this.date} format. In this case was timer reset to 00:00:00:00 (Use current time). Please check what is the value in targetDate or use method newDate() with parametr like 'Month DD YYYY HH:MM'
+      `,
+      timeLeft: `targetDate ${this.getLocaleTime()} < Current time. So please change Date to start Timer. Use method newDate() with parametr like 'Month DD YYYY HH:MM'
+      `,
+      timeIsCome: `The time ${this.getLocaleTime()} is come`,
+    };
+  }
+
+  getContainerMarkUp() {
+    const normalizedId = this.getNormalizedId();
+    const newContainer = `<div class="timer" id="${normalizedId}">`;
+    return newContainer;
+  }
+
+  getTimerMarkup() {
     return `
     <div class="field">
       <span class="value" data-value="days">00</span>
@@ -26,26 +50,28 @@ class CountdownTimer {
     </div>`;
   }
 
-  #getContainerMarkUp() {
-    const normalizedId = this.timerSelector.replace('#', '');
-    const newContainer = `<div class="timer" id="${normalizedId}">`;
-    return newContainer;
+  getTimerMarkupWithContainer() {
+    const newContainer = this.getContainerMarkUp();
+    const timerMarkUp = this.getTimerMarkup();
+    document.body.insertAdjacentHTML('afterbegin', `${newContainer} ${timerMarkUp}`);
   }
 
-  #getTimerMarkupWithIncorectSelector() {
-    const newContainer = this.#getContainerMarkUp();
-    const timerMarkUp = this.#getTimerMarkup();
-    document.body.insertAdjacentHTML('beforeend', `${newContainer} ${timerMarkUp}`);
+  getNormalizedId() {
+    return this.timerSelector.replace('#', '');
   }
 
   renderTimerMarkup() {
-    const timerMarkUp = this.#getTimerMarkup();
     const timerContainer = document.querySelector(`${this.timerSelector}`);
+
     if (!timerContainer) {
-      this.#getTimerMarkupWithIncorectSelector();
+      this.getTimerMarkupWithContainer();
+
+      console.warn(this.logs().noContainer);
       return;
     }
-    timerContainer.insertAdjacentHTML('afterbegin', timerMarkUp);
+
+    const timerMarkUp = this.getTimerMarkup();
+    timerContainer.innerHTML = timerMarkUp;
   }
 
   getRefs() {
@@ -59,10 +85,6 @@ class CountdownTimer {
   }
 
   getTimerTime() {
-    if (!this.date.getTime()) {
-      console.log('Invalid targetDate');
-      this.date = new Date();
-    }
     return this.date.getTime() - Date.now();
   }
 
@@ -92,33 +114,68 @@ class CountdownTimer {
     const time = this.getTimerTime();
     const refs = this.getRefs();
     if (time < 0) {
-      console.log('time is left');
-      clearInterval(this.#intervalId);
-      this.#intervalId = null;
-      alert('TIME IS LEFT');
+      console.log(this.logs().timeIsCome);
+      this.stopTimer();
+      alert(this.logs().timeIsCome);
       return;
     }
     const timerUnits = this.getTimerUnits(time);
     this.renderTimer(refs, timerUnits);
   }
 
-  startTimer() {
+  start() {
     this.renderTimerMarkup();
+
+    if (!this.date.getTime()) {
+      console.warn(this.logs().invalidTime);
+      return;
+    }
+
     if (this.getTimerTime() <= 0) {
-      console.log('Datetime <= current time or Invalid targetDate');
+      console.warn(this.logs().timeLeft);
       return;
     }
     this.getTimer();
     this.#intervalId = setInterval(this.getTimer.bind(this), 1000);
   }
+
+  stopTimer() {
+    if (this.#intervalId) {
+      clearInterval(this.#intervalId);
+      this.#intervalId = null;
+    }
+  }
+
+  newDate(time) {
+    console.clear();
+    this.stopTimer();
+    this.date = new Date(time);
+    this.start();
+  }
 }
+
+// Класс CountdownTimer генерит разметку сам.
+
+// Таймер не будет крашиться:
+// 1. Если при создании екземпляра указать id, которого нет в разметке.
+// 2. Если в разметке не добавить контейнер вообще
+// 3. Если при создании екземпляра прийдёт время меньше текущего.
+// 4. Если прийдёт время в неправильном формате.
+
+// Для интереса добавил логи, которые указывают на ошибку
 
 const timer = new CountdownTimer({
   selector: '#timer-1',
-  targetDate: new Date('Dec 01 2021 00:00'),
+  targetDate: new Date('Oct 25 2021 20:50'),
 });
 
-timer.startTimer();
+timer.start();
+
+// timer.newDate('Dec 12 2021 15:00');
+// timer.newDate('Dec 12 2020 15:00');
+// timer.start();
 
 const timerTitle = document.querySelector('.timer-head');
-timerTitle.textContent = `${timer.date.toLocaleDateString()} ${timer.date.toLocaleTimeString()} will come in:`;
+timerTitle.textContent = `${timer.getLocaleTime()} ${
+  timer.getTimerTime() > 0 ? 'will come in:' : 'has already passed'
+} `;

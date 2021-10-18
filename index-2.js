@@ -1,39 +1,79 @@
-const refs = {
-  daysSpan: document.querySelector('#timer-2 span[data-value="days"]'),
-  hoursSpan: document.querySelector('#timer-2 span[data-value="hours"]'),
-  minsSpan: document.querySelector('#timer-2 span[data-value="mins"]'),
-  secsSpan: document.querySelector('#timer-2 span[data-value="secs"]'),
-};
+class Timer {
+  constructor({ selector, targetDate }) {
+    this.date = targetDate;
+    this.timerSelector = selector;
+  }
 
-const date = new Date('Nov 1, 2021');
+  #intervalId = null;
 
-const getTimerTime = date => date.getTime() - Date.now();
+  getRefs() {
+    const refs = {
+      daysSpan: document.querySelector(`${this.timerSelector} span[data-value="days"]`),
+      hoursSpan: document.querySelector(`${this.timerSelector} span[data-value="hours"]`),
+      minsSpan: document.querySelector(`${this.timerSelector} span[data-value="mins"]`),
+      secsSpan: document.querySelector(`${this.timerSelector} span[data-value="secs"]`),
+    };
+    return refs;
+  }
 
-const padStartSrt = number => String(number).padStart(2, 0);
+  getTimerTime() {
+    return this.date.getTime() - Date.now();
+  }
 
-const getTimerUnits = time => {
-  const days = padStartSrt(Math.floor(time / (1000 * 60 * 60 * 24)));
-  const hours = padStartSrt(Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
-  const mins = padStartSrt(Math.floor((time % (1000 * 60 * 60)) / (1000 * 60)));
-  const secs = padStartSrt(Math.floor((time % (1000 * 60)) / 1000));
+  padStartSrt(number) {
+    return String(number).padStart(2, 0);
+  }
 
-  return { days, hours, mins, secs };
-};
+  getTimerUnits(time) {
+    const days = this.padStartSrt(Math.floor(time / (1000 * 60 * 60 * 24)));
+    const hours = this.padStartSrt(Math.floor((time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+    const mins = this.padStartSrt(Math.floor((time % (1000 * 60 * 60)) / (1000 * 60)));
+    const secs = this.padStartSrt(Math.floor((time % (1000 * 60)) / 1000));
 
-const renderTimer = timerUnits => {
-  const { days, hours, mins, secs } = timerUnits;
+    return { days, hours, mins, secs };
+  }
 
-  refs.daysSpan.textContent = days;
-  refs.hoursSpan.textContent = hours;
-  refs.minsSpan.textContent = mins;
-  refs.secsSpan.textContent = secs;
-};
+  renderTimer(refs, timerUnits) {
+    const { days, hours, mins, secs } = timerUnits;
+    const { daysSpan, hoursSpan, minsSpan, secsSpan } = refs;
+    daysSpan.textContent = days;
+    hoursSpan.textContent = hours;
+    minsSpan.textContent = mins;
+    secsSpan.textContent = secs;
+  }
 
-const getTimer = date => {
-  const time = getTimerTime(date);
-  const timerUnits = getTimerUnits(time);
-  renderTimer(timerUnits);
-};
+  getTimer() {
+    const time = this.getTimerTime();
+    const refs = this.getRefs();
+    if (time < 0) {
+      this.stopTimer();
+      alert('Time is come');
+      return;
+    }
+    const timerUnits = this.getTimerUnits(time);
+    this.renderTimer(refs, timerUnits);
+  }
 
-getTimer(date);
-setInterval(getTimer, 1000, date);
+  start() {
+    if (this.getTimerTime() <= 0) {
+      console.log('Time is come');
+      return;
+    }
+    this.getTimer();
+    this.#intervalId = setInterval(this.getTimer.bind(this), 1000);
+  }
+
+  stopTimer() {
+    if (this.#intervalId) {
+      clearInterval(this.#intervalId);
+      this.#intervalId = null;
+    }
+  }
+}
+
+const timer = new Timer({
+  selector: '#timer-2',
+  targetDate: new Date('Oct 25 2021 22:10'),
+});
+
+timer.start();
